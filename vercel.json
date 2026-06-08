@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "name": "sales-dashboard-static",
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
