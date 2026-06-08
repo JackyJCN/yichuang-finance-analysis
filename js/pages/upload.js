@@ -28,18 +28,25 @@ SD.renderUpload = function renderUpload(root) {
     if (!file) return;
     msg.textContent = "正在解析…";
     msg.className = "msg";
-    file.arrayBuffer().then(function (buffer) {
-      return SD.parseSalesExcel(buffer);
-    }).then(function (result) {
-      SD.saveRecords(result.rows);
-      msg.innerHTML = "导入成功：<strong>" + result.rowCount + "</strong> 行";
-      if (result.monthMin) msg.innerHTML += "，月份 " + result.monthMin + " ~ " + result.monthMax;
-      if (result.warnings.length) msg.innerHTML += '<br><span class="muted">' + result.warnings.join(" ") + "</span>";
-      msg.className = "msg ok";
-    }).catch(function (e) {
-      msg.textContent = e.message || String(e);
+    var parse = function () {
+      file.arrayBuffer().then(function (buffer) {
+        return SD.parseSalesExcel(buffer);
+      }).then(function (result) {
+        SD.saveRecords(result.rows);
+        msg.innerHTML = "导入成功：<strong>" + result.rowCount + "</strong> 行";
+        if (result.monthMin) msg.innerHTML += "，月份 " + result.monthMin + " ~ " + result.monthMax;
+        if (result.warnings.length) msg.innerHTML += '<br><span class="muted">' + result.warnings.join(" ") + "</span>";
+        msg.className = "msg ok";
+      }).catch(function (e) {
+        msg.textContent = e.message || String(e);
+        msg.className = "msg err";
+      });
+    };
+    if (SD.ensureXlsx) SD.ensureXlsx().then(parse).catch(function (e) {
+      msg.textContent = e.message || "Excel 库加载失败，请检查网络";
       msg.className = "msg err";
     });
+    else parse();
   }
 
   input.onchange = function () { handleFile(input.files && input.files[0]); };

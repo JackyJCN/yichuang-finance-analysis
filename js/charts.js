@@ -33,6 +33,7 @@ window.SD = window.SD || {};
   }
 
   SD.disposeCharts = function disposeCharts(root) {
+    if (typeof echarts === "undefined") return;
     var scope = root || document;
     scope.querySelectorAll("[data-chart]").forEach(function (el) {
       var inst = echarts.getInstanceByDom(el);
@@ -62,6 +63,16 @@ window.SD = window.SD || {};
     chart.resize();
     return chart;
   }
+
+  SD.whenEcharts = function whenEcharts(run) {
+    if (window.echarts) {
+      run();
+      return;
+    }
+    if (SD.ensureEcharts) {
+      SD.ensureEcharts().then(run).catch(function () {});
+    }
+  };
 
   SD.renderMetricBar = function renderMetricBar(el, data, metricKey, title, forExport) {
     if (!data || !data.length) {
@@ -223,6 +234,7 @@ window.SD = window.SD || {};
   };
 
   SD.resizeCharts = function resizeCharts(root) {
+    if (typeof echarts === "undefined") return;
     var scope = root || document;
     scope.querySelectorAll("[data-chart].chart-pie").forEach(function (el) {
       SD.fitPieContainer(el);

@@ -88,16 +88,20 @@ SD.renderDashboard = function renderDashboard(root) {
 
   function paintCharts(area, forExport) {
     if (!lastView || !area) return;
-    var v = lastView;
-    if (v.trend.length) {
-      SD.renderMetricBar(area.querySelector("#chart-revenue"), v.trend, "revenue", "销售收入", forExport);
-      SD.renderMetricBar(area.querySelector("#chart-cost"), v.trend, "cost", "销售成本", forExport);
-      SD.renderMetricBar(area.querySelector("#chart-profit"), v.trend, "gross_profit", "销售毛利", forExport);
-    }
-    SD.renderSalespersonPie(area.querySelector("#chart-sales"), v.by_salesperson, forExport);
-    SD.renderDonut(area.querySelector("#chart-type"), v.by_customer_type, donutMetric, forExport);
-    SD.renderPareto(area.querySelector("#chart-pareto"), v.customer_pareto, forExport);
-    requestAnimationFrame(function () { SD.resizeCharts(area); });
+    var draw = function () {
+      var v = lastView;
+      if (v.trend.length) {
+        SD.renderMetricBar(area.querySelector("#chart-revenue"), v.trend, "revenue", "销售收入", forExport);
+        SD.renderMetricBar(area.querySelector("#chart-cost"), v.trend, "cost", "销售成本", forExport);
+        SD.renderMetricBar(area.querySelector("#chart-profit"), v.trend, "gross_profit", "销售毛利", forExport);
+      }
+      SD.renderSalespersonPie(area.querySelector("#chart-sales"), v.by_salesperson, forExport);
+      SD.renderDonut(area.querySelector("#chart-type"), v.by_customer_type, donutMetric, forExport);
+      SD.renderPareto(area.querySelector("#chart-pareto"), v.customer_pareto, forExport);
+      requestAnimationFrame(function () { SD.resizeCharts(area); });
+    };
+    if (SD.whenEcharts) SD.whenEcharts(draw);
+    else draw();
   }
 
   exportBtn.onclick = function () {

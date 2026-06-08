@@ -28,10 +28,6 @@ window.SD = window.SD || {};
     return next();
   }
 
-  SD.loadLocalScript = function loadLocalScript(path, key) {
-    return loadScript(path, "local:" + (key || path));
-  };
-
   SD.ensureEcharts = function ensureEcharts() {
     if (window.echarts) return Promise.resolve();
     return loadFirst([
@@ -66,7 +62,7 @@ window.SD = window.SD || {};
 
   SD.ensureLogoData = function ensureLogoData() {
     if (SD.COMPANY_LOGO_DATA) return Promise.resolve();
-    return SD.loadLocalScript("./js/logo-data.js", "logo-data");
+    return loadScript("./js/logo-data.js", "logo-data");
   };
 
   SD.ensureExportLibs = function ensureExportLibs() {
@@ -77,30 +73,10 @@ window.SD = window.SD || {};
     ]);
   };
 
-  /** 按路由按需加载页面脚本与 CDN，避免首屏下载全部资源 */
-  SD.loadPageDeps = function loadPageDeps(path) {
-    if (path === "/upload") {
-      return SD.ensureXlsx().then(function () {
-        return Promise.all([
-          SD.loadLocalScript("./js/parser.js", "parser"),
-          SD.loadLocalScript("./js/pages/upload.js", "page-upload"),
-        ]);
-      });
-    }
-    if (path === "/ai") {
-      return SD.loadLocalScript("./js/pages/ai.js", "page-ai");
-    }
-    if (path === "/settings") {
-      return SD.loadLocalScript("./js/pages/settings.js", "page-settings");
-    }
-    return SD.ensureEcharts().then(function () {
-      return Promise.all([
-        SD.loadLocalScript("./js/metrics.js", "metrics"),
-        SD.loadLocalScript("./js/filters.js", "filters"),
-        SD.loadLocalScript("./js/charts.js", "charts"),
-        SD.loadLocalScript("./js/export-pdf.js", "export-pdf"),
-        SD.loadLocalScript("./js/pages/dashboard.js", "page-dashboard"),
-      ]);
-    });
+  /** 后台预加载 ECharts，不阻塞页面进入 */
+  SD.preloadEcharts = function preloadEcharts() {
+    SD.ensureEcharts().catch(function () {});
   };
+
+  SD.preloadEcharts();
 })(SD);
