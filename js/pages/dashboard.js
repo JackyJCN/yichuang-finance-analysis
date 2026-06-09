@@ -2,16 +2,21 @@ window.SD = window.SD || {};
 SD.renderDashboard = function renderDashboard(root) {
   var allRows = SD.loadRecords();
   var monthOptions = SD.listMonths(allRows);
-  var filterState = {
+  var saved = (SD.loadUiState().dashboard || {});
+  var filterState = Object.assign({
     months: [],
     salespersons: [],
     customer_types: [],
     customers: [],
     product_codes: [],
-  };
-  var donutMetric = "revenue";
+  }, saved.filters || {});
+  var donutMetric = saved.donutMetric || "revenue";
   var lastView = null;
   var selects = {};
+
+  function saveUi() {
+    SD.patchUiState("dashboard", { filters: filterState, donutMetric: donutMetric });
+  }
 
   function fmt(n) {
     return Number(n || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -54,35 +59,40 @@ SD.renderDashboard = function renderDashboard(root) {
 
   selects.months = SD.createMultiSelect({
     placeholder: "请选择月份(可多选)", width: 220, value: filterState.months, options: monthOptions,
-    onChange: function (v) { filterState.months = v; paint(); },
+    maxVisibleTags: 1,
+    onChange: function (v) { filterState.months = v; saveUi(); paint(); },
   });
   root.querySelector("#f-months").appendChild(selects.months.el);
 
   selects.sales = SD.createMultiSelect({
-    placeholder: "搜索销售人员", width: 200, value: [],
+    placeholder: "搜索销售人员", width: 200, value: filterState.salespersons,
+    maxVisibleTags: 1,
     searchFn: function (q) { return SD.searchFilterOptions(allRows, "salesperson", q); },
-    onChange: function (v) { filterState.salespersons = v; paint(); },
+    onChange: function (v) { filterState.salespersons = v; saveUi(); paint(); },
   });
   root.querySelector("#f-sales").appendChild(selects.sales.el);
 
   selects.ctype = SD.createMultiSelect({
-    placeholder: "经销商/终端客户", width: 180, value: [],
+    placeholder: "经销商/终端客户", width: 180, value: filterState.customer_types,
+    maxVisibleTags: 1,
     searchFn: function (q) { return SD.searchFilterOptions(allRows, "customer_type", q); },
-    onChange: function (v) { filterState.customer_types = v; paint(); },
+    onChange: function (v) { filterState.customer_types = v; saveUi(); paint(); },
   });
   root.querySelector("#f-ctype").appendChild(selects.ctype.el);
 
   selects.customer = SD.createMultiSelect({
-    placeholder: "输入客户关键字", width: 240, value: [],
+    placeholder: "输入客户关键字", width: 240, value: filterState.customers,
+    maxVisibleTags: 1,
     searchFn: function (q) { return SD.searchFilterOptions(allRows, "customer", q); },
-    onChange: function (v) { filterState.customers = v; paint(); },
+    onChange: function (v) { filterState.customers = v; saveUi(); paint(); },
   });
   root.querySelector("#f-customer").appendChild(selects.customer.el);
 
   selects.product = SD.createMultiSelect({
-    placeholder: "输入编码/名称关键字", width: 240, value: [],
+    placeholder: "输入编码/名称关键字", width: 240, value: filterState.product_codes,
+    maxVisibleTags: 1,
     searchFn: function (q) { return SD.searchFilterOptions(allRows, "product_code", q); },
-    onChange: function (v) { filterState.product_codes = v; paint(); },
+    onChange: function (v) { filterState.product_codes = v; saveUi(); paint(); },
   });
   root.querySelector("#f-product").appendChild(selects.product.el);
 
@@ -203,8 +213,8 @@ SD.renderDashboard = function renderDashboard(root) {
       '<div class="card chart-card"><div class="card-head-row"><h3 class="card-title">客户类别构成</h3>' +
       '<span class="export-metric-hint muted small" style="display:none"></span>' +
       '<div class="seg-toggle" id="metric-toggle">' +
-      '<button type="button" class="seg active" data-m="revenue">按收入</button>' +
-      '<button type="button" class="seg" data-m="gross_profit">按毛利</button></div></div>' +
+      '<button type="button" class="seg' + (donutMetric === "revenue" ? " active" : "") + '" data-m="revenue">按收入</button>' +
+      '<button type="button" class="seg' + (donutMetric === "gross_profit" ? " active" : "") + '" data-m="gross_profit">按毛利</button></div></div>' +
       '<div class="chart chart-pie" data-chart id="chart-type"></div></div></section></div>' +
       '<div class="pdf-section"><section class="card chart-card">' +
       '<h3 class="card-title center">客户帕累托图分析' +
@@ -214,6 +224,7 @@ SD.renderDashboard = function renderDashboard(root) {
     body.querySelectorAll("#metric-toggle .seg").forEach(function (btn) {
       btn.onclick = function () {
         donutMetric = btn.getAttribute("data-m");
+        saveUi();
         body.querySelectorAll("#metric-toggle .seg").forEach(function (b) { b.classList.toggle("active", b === btn); });
         SD.renderDonut(body.querySelector("#chart-type"), lastView.by_customer_type, donutMetric, false);
         SD.resizeCharts(body.querySelector("#report-area"));

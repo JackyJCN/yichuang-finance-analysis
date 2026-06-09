@@ -195,21 +195,25 @@ body {
 /* 多选下拉 */
 .msel { position: relative; min-width: 180px; }
 .msel-inner {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
-  min-height: 32px; padding: 2px 28px 2px 8px;
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 4px;
+  min-height: 32px; max-height: 32px; padding: 2px 28px 2px 8px;
   background: rgba(6, 10, 18, 0.9); border: 1px solid rgba(0, 229, 255, 0.28);
-  border-radius: 4px; cursor: text;
+  border-radius: 4px; cursor: text; overflow: hidden;
 }
 .msel-inner:focus-within { border-color: var(--cyber-cyan); box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.12); }
-.msel-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.msel-tags { display: flex; flex-wrap: nowrap; gap: 4px; flex-shrink: 0; max-width: calc(100% - 72px); overflow: hidden; }
 .msel-tag {
-  display: inline-flex; align-items: center; gap: 2px;
+  display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
   background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.35);
   color: var(--cyber-cyan); font-size: 12px; padding: 0 4px 0 8px; border-radius: 3px; max-width: 140px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .msel-tag button { background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; padding: 0 2px; }
-.msel-input { flex: 1; min-width: 60px; border: none; background: transparent; color: var(--text); font-size: 13px; outline: none; }
+.msel-tag.msel-tag-summary {
+  max-width: 120px; cursor: default;
+}
+.msel-input { flex: 1; min-width: 48px; border: none; background: transparent; color: var(--text); font-size: 13px; outline: none; }
+.ai-month-filter .msel { max-width: 320px; }
 .msel-clear {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; display: none;

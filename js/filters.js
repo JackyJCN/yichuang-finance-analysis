@@ -39,24 +39,38 @@ window.SD = window.SD || {};
       '<div class="msel-panel hidden"></div>' +
       '<button type="button" class="msel-clear" title="清空">&times;</button>';
 
+    var inner = wrap.querySelector(".msel-inner");
     var tagsEl = wrap.querySelector(".msel-tags");
     var input = wrap.querySelector(".msel-input");
     var panel = wrap.querySelector(".msel-panel");
     var clearBtn = wrap.querySelector(".msel-clear");
     input.placeholder = config.placeholder || "请选择";
 
+    inner.addEventListener("click", function (e) {
+      if (e.target.closest(".msel-tag button")) return;
+      input.focus();
+      showPanel();
+    });
+
     function renderTags() {
-      tagsEl.innerHTML = value.map(function (v) {
-        return '<span class="msel-tag">' + SD.escapeHtml(v) + '<button type="button" data-v="' + SD.escapeHtml(v) + '">&times;</button></span>';
-      }).join("");
-      tagsEl.querySelectorAll("button").forEach(function (btn) {
-        btn.onclick = function (e) {
-          e.stopPropagation();
-          value = value.filter(function (x) { return x !== btn.getAttribute("data-v"); });
-          renderTags();
-          config.onChange(value.slice());
-        };
-      });
+      var maxShow = config.maxVisibleTags != null ? config.maxVisibleTags : 2;
+      if (value.length > maxShow) {
+        var tip = value.join("、");
+        tagsEl.innerHTML =
+          '<span class="msel-tag msel-tag-summary" title="' + SD.escapeHtml(tip) + '">已选 ' + value.length + " 项</span>";
+      } else {
+        tagsEl.innerHTML = value.map(function (v) {
+          return '<span class="msel-tag">' + SD.escapeHtml(v) + '<button type="button" data-v="' + SD.escapeHtml(v) + '">&times;</button></span>';
+        }).join("");
+        tagsEl.querySelectorAll("button").forEach(function (btn) {
+          btn.onclick = function (e) {
+            e.stopPropagation();
+            value = value.filter(function (x) { return x !== btn.getAttribute("data-v"); });
+            renderTags();
+            config.onChange(value.slice());
+          };
+        });
+      }
       clearBtn.style.display = value.length ? "block" : "none";
     }
 

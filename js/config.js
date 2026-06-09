@@ -1,4 +1,5 @@
 window.SD = window.SD || {};
+SD.APP_VERSION = "20250608";
 SD.COMPANY_NAME = "上海伊创刀具有限公司";
 SD.APP_TITLE = "销售部门经营分析看板";
 SD.REPORT_TITLE = "销售经营分析报告";
