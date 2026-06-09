@@ -74,7 +74,7 @@ window.SD = window.SD || {};
     }
   };
 
-  SD.renderMetricBar = function renderMetricBar(el, data, metricKey, title, forExport) {
+  SD.renderMetricBar = function renderMetricBar(el, data, metricKey, title, forExport, yoyTrend) {
     if (!data || !data.length) {
       SD.renderChartEmpty(el, true, false, 280);
       return null;
@@ -83,6 +83,33 @@ window.SD = window.SD || {};
     var chart = echarts.init(el);
     var color = (forExport ? BAR_COLORS_EXPORT : BAR_COLORS)[metricKey] || "#00e5ff";
     var many = data.length > 6;
+    var yoyMap = {};
+    (yoyTrend || []).forEach(function (y) { yoyMap[y.month] = y; });
+
+    function yoyTooltipLines(monthKey) {
+      var y = yoyMap[monthKey];
+      if (!y) {
+        var parts = String(monthKey).split("-");
+        if (parts.length === 2) {
+          var prevM = (parseInt(parts[0], 10) - 1) + "-" + parts[1];
+          return ['<span style="color:#888">同比 vs ' + prevM + "：暂无去年同期数据</span>"];
+        }
+        return [];
+      }
+      var cfg = metricKey === "revenue"
+        ? { change: y.revenue_yoy_change, rate: y.revenue_yoy_rate, vs: y.compare_month }
+        : metricKey === "cost"
+          ? { change: y.cost_yoy_change, rate: y.cost_yoy_rate, vs: y.compare_month }
+          : { change: y.gross_profit_yoy_change, rate: y.gross_profit_yoy_rate, vs: y.compare_month };
+      var sign = cfg.change >= 0 ? "+" : "";
+      var rateStr = cfg.rate == null ? "—" : (cfg.rate >= 0 ? "+" : "") + cfg.rate.toFixed(2) + "%";
+      return [
+        '<span style="color:#888">同比 vs ' + cfg.vs + "</span>",
+        "同比增减：" + sign + fmtYuan(cfg.change),
+        "同比增减率：" + rateStr,
+      ];
+    }
+
     chart.setOption({
       animation: !forExport,
       backgroundColor: forExport ? "#ffffff" : "transparent",
@@ -92,8 +119,13 @@ window.SD = window.SD || {};
         formatter: function (params) {
           var row = data[params[0].dataIndex];
           if (!row) return "";
-          return [row.month, "销售收入：" + fmtYuan(row.revenue), "成本：" + fmtYuan(row.cost),
-            "毛利额：" + fmtYuan(row.gross_profit), "毛利率：" + (row.gross_margin * 100).toFixed(2) + "%"].join("<br/>");
+          return [
+            row.month,
+            "销售收入：" + fmtYuan(row.revenue),
+            "成本：" + fmtYuan(row.cost),
+            "毛利额：" + fmtYuan(row.gross_profit),
+            "毛利率：" + (row.gross_margin * 100).toFixed(2) + "%",
+          ].concat(yoyTooltipLines(row.month)).join("<br/>");
         },
       },
       grid: { left: 48, right: 16, top: forExport ? 56 : 48, bottom: many ? 52 : 28, borderWidth: 0 },

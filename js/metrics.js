@@ -54,6 +54,51 @@ window.SD = window.SD || {};
     }));
   }
 
+  /** 同比：当月 vs 去年同期（需有去年同月数据） */
+  function getYoyTrend(allRows, filters) {
+    filters = filters || {};
+    const baseRows = applyFilters(allRows, {
+      salespersons: filters.salespersons,
+      customers: filters.customers,
+      customer_types: filters.customer_types,
+      product_codes: filters.product_codes,
+    });
+    const trend = getMonthlyTrend(baseRows);
+    const byMonth = Object.fromEntries(trend.map((t) => [t.month, t]));
+    const displayMonths = filters.months?.length ? new Set(filters.months) : null;
+
+    function yoy(cur, prev) {
+      const change = Math.round((cur - prev) * 100) / 100;
+      const rate = prev ? Math.round((change / prev) * 10000) / 100 : null;
+      return { change, rate };
+    }
+
+    const out = [];
+    for (const t of trend) {
+      if (displayMonths && !displayMonths.has(t.month)) continue;
+      const parts = t.month.split("-");
+      if (parts.length !== 2) continue;
+      const prevKey = `${parseInt(parts[0], 10) - 1}-${parts[1]}`;
+      const prev = byMonth[prevKey];
+      if (!prev) continue;
+      const rev = yoy(t.revenue, prev.revenue);
+      const costY = yoy(t.cost, prev.cost);
+      const gp = yoy(t.gross_profit, prev.gross_profit);
+      out.push({
+        month: t.month,
+        compare_month: prevKey,
+        revenue_yoy_change: rev.change,
+        revenue_yoy_rate: rev.rate,
+        cost_yoy_change: costY.change,
+        cost_yoy_rate: costY.rate,
+        gross_profit_yoy_change: gp.change,
+        gross_profit_yoy_rate: gp.rate,
+        gross_margin_yoy_pp: Math.round((t.gross_margin - prev.gross_margin) * 10000) / 100,
+      });
+    }
+    return out;
+  }
+
   function breakdown(rows, field, limit) {
     limit = limit || 50;
     const map = new Map();
@@ -105,6 +150,7 @@ window.SD = window.SD || {};
       months: SD.listMonths(allRows),
       summary: SD.getSummary(filtered),
       trend: getMonthlyTrend(filtered),
+      yoy_trend: getYoyTrend(allRows, filters),
       by_salesperson: breakdown(filtered, "salesperson", 50),
       customer_pareto: SD.getCustomerPareto(filtered),
       customer_count: customerAll.length,

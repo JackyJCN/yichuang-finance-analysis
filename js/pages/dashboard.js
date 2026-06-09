@@ -91,9 +91,9 @@ SD.renderDashboard = function renderDashboard(root) {
     var draw = function () {
       var v = lastView;
       if (v.trend.length) {
-        SD.renderMetricBar(area.querySelector("#chart-revenue"), v.trend, "revenue", "销售收入", forExport);
-        SD.renderMetricBar(area.querySelector("#chart-cost"), v.trend, "cost", "销售成本", forExport);
-        SD.renderMetricBar(area.querySelector("#chart-profit"), v.trend, "gross_profit", "销售毛利", forExport);
+        SD.renderMetricBar(area.querySelector("#chart-revenue"), v.trend, "revenue", "销售收入", forExport, v.yoy_trend);
+        SD.renderMetricBar(area.querySelector("#chart-cost"), v.trend, "cost", "销售成本", forExport, v.yoy_trend);
+        SD.renderMetricBar(area.querySelector("#chart-profit"), v.trend, "gross_profit", "销售毛利", forExport, v.yoy_trend);
       }
       SD.renderSalespersonPie(area.querySelector("#chart-sales"), v.by_salesperson, forExport);
       SD.renderDonut(area.querySelector("#chart-type"), v.by_customer_type, donutMetric, forExport);
